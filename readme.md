@@ -1,6 +1,6 @@
 # 🔭 Remote Plugin
 
-![MadeForGraviton](https://raw.githubusercontent.com/Graviton-Code-Editor/website/master/src/badges/made_for_graviton.svg?sanitize=true)
+```![MadeForFM2](https://raw.githubusercontent.com/DanSketic/Filing-Manager-Website/master/badges/made_for_fm2.svg?sanitize=true)```
 
 This is a Remote Live Coding plugin for Graviton.
 
@@ -22,9 +22,9 @@ Contributions are welcomed!
 * [] Implement `watchDir` on ExplorerProvider
 
 ## 🕹 Developing
-Clone the repo to your .graviton2/plugins:
+Clone the repo to your .filingmanager/plugins:
 ```shell
-git clone https://github.com/Graviton-Code-Editor/remote-plugin.git 
+git clone https://github.com/DanSketic/fm-remote-plugin.git 
 ```
 
 Install dependencies:
