@@ -29,7 +29,7 @@ Contributions are welcomed!
 ## 🕹 Developing
 Clone the repo to your .filingmanager/plugins:
 ```shell
-git clone https://github.com/DanSketic/fm-remote-plugin.git 
+git clone https://github.com/DanSketic/fm-sdk.git
 ```
 
 Install dependencies:

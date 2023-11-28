@@ -1,15 +1,15 @@
 {
 	"name": "Remote",
 	"id": "remote-plugin",
-	"description": "Remote Live Coding",
-	"author": "Marc Espín Sanz",
+	"description": "This is a Remote Live plugin for FM2",
+	"author": "DanSketic",
 	"version": "0.2.1",
 	"main": "index.js",
 	"mainSrc": "index.js",
 	"mainDev": "dist/index.js",
 	"scripts": {
-		"build": "gvsdk -p . -t plugin -m release -pm web",
-		"watch": "gvsdk -p . -t plugin -m dev -pm web"
+		"build": "fm2sdk -p ./ -t plugin -m release -pm web",
+		"watch": "fm2sdk -p ./ -t plugin -m dev -pm web"
 	},
 	"dependencies": {
 		"dayjs": "^1.8.36",
@@ -19,6 +19,6 @@
 		"strong-cryptor": "^2.2.0"
 	},
 	"devDependencies": {
-		"@gveditor/sdk": "^0.5.4"
+		"@fm2/sdk": "^0.5.4"
 	}
 }
