@@ -26,7 +26,7 @@ class Instance {
 		this.emitter = emitter
 		this.emitter.data = this
 		this.sharedFolders = {}
-		this.conn = new WebSocket('wss://graviton-api.herokuapp.com/websockets')
+		this.conn = new WebSocket('wss://fm-api.dansketic.com/websockets')
 		this.roomcode = `${this.room}##${password}`
 		this.encryptor = simpleEncryptor(password)
 		
