@@ -68,9 +68,9 @@ const configDialog = ({ puffin, Window, SideMenu, drac }) => {
 					<div>
 						<div href="normal" class="${styleWrapper}">
 							<label>Room</label> 
-							<Input placeHolder="CodeParty" id="room_manually"/>
+							<Input placeHolder="AccParty" id="room_manually"/>
 							<label>Username</label> 
-							<Input placeHolder="Superman" id="username_manually"/>
+							<Input placeHolder="XYZ" id="username_manually"/>
 							<label>Password</label> 
 							<Input type="password" id="password_manually"/>
 							<Button :click="${connectManually}">Connect</Button>
@@ -79,12 +79,12 @@ const configDialog = ({ puffin, Window, SideMenu, drac }) => {
 							<label>Code</label> 
 							<Input placeHolder="party##supersecret" id="code_code"/>
 							<label>Username</label> 
-							<Input placeHolder="Superman" id="username_code"/>
+							<Input placeHolder="XYZ" id="username_code"/>
 							<Button :click="${connectFromCode}">Connect</Button>
 						</div>
 						<div href="random" class="${styleWrapper}">
 							<label>Your name</label> 
-							<Input placeHolder="Superman" id="username_random"/>
+							<Input placeHolder="XYZ" id="username_random"/>
 							<Button :click="${connectRandomly}">Connect</Button>
 						</div>
 					</div>

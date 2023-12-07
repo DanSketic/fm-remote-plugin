@@ -26,7 +26,7 @@ class Instance {
 		this.emitter = emitter
 		this.emitter.data = this
 		this.sharedFolders = {}
-		this.conn = new WebSocket('wss://fm-api.dansketic.com/websockets')
+		this.conn = new WebSocket('wss://fm-remote.dansketic.com/websockets')
 		this.roomcode = `${this.room}##${password}`
 		this.encryptor = simpleEncryptor(password)
 		
@@ -104,77 +104,7 @@ export function entry(API){
 	const { drac: { Button }, puffin, StatusBarItem, ContextMenu, Notification, RunningConfig } = API 
 	const emitter = new puffin.state()
 	createSidePanel(emitter,API)
-	let sharing = false
-	RunningConfig.emit('addLocalTerminalAccessory',{
-		menu(state){
-			const terminalID = shortid.generate()
-			
-			let terminalOutputListener
-			let terminalBrokenLineListener
-			let terminalInputListener
 
-			function onClick(){
-				sharing = !sharing
-
-				if(sharing){
-					emitter.emit('message',{
-						type: 'terminalShared',
-						content: {
-							terminalID
-						}
-					})
-					terminalOutputListener = emitter.on('room/terminalOutput',({ data, terminalID: senderTerminalID }) => {
-						if(senderTerminalID === terminalID){
-							state.emit('data', data)
-						}
-						
-					})
-					terminalBrokenLineListener = emitter.on('room/terminalBreakLine', ({ terminalID: senderTerminalID }) => {
-						if(senderTerminalID === terminalID){
-							state.emit('breakLine')
-						}
-					})
-					terminalInputListener = state.on('write', (data) => {
-						emitter.emit('message',{
-							type: 'terminalUpdated',
-							content: {
-								data,
-								terminalID
-							}
-						})
-					})
-				}else{
-					emitter.emit('message',{
-						type: 'terminalUnshared',
-						content: {
-							terminalID
-						}
-					})
-					terminalOutputListener.cancel()
-					terminalBrokenLineListener.cancel()
-					terminalInputListener.cancel()
-				}
-			}
-			
-			if(sharing){
-				return [
-					{
-						label: 'Unshare',
-						action: onClick
-					}
-				]
-			} else {
-				return [
-					{
-						label: 'Share',
-						action: onClick
-					}
-				]
-			}
-			
-		}
-	})
-	
 	new StatusBarItem({
 		label: 'Remote',
 		action(e){
@@ -217,46 +147,6 @@ export function entry(API){
 
 function handleEvents(emitter,API){
 	const { RunningConfig } = API
-	
-	emitter.on('room/terminalShared', async ({ senderUsername, terminalID: originalTerminalID }) => {
-		RunningConfig.emit('registerTerminalShell',{
-			name: `remote:${originalTerminalID}@${senderUsername}`,
-			onCreated(state){
-				emitter.on('room/terminalUpdated',({ data, senderUsername: terminalAuthor, terminalID }) => {
-					if(senderUsername === terminalAuthor && originalTerminalID === terminalID){
-						state.emit('write', data)
-					}
-				})
-				
-				state.on('keyPressed',(key) => {
-					if(key === 'Enter'){
-						emitter.emit('message', {
-							type: 'terminalBreakLine',
-							content: {
-								terminalID: originalTerminalID
-							}
-						})
-					}
-				})
-				
-				state.on('data', (data) => {
-					emitter.emit('message', {
-						type: 'terminalOutput',
-						content:{
-							data,
-							terminalID: originalTerminalID
-						}
-					})
-				})
-			}
-		})
-	})
-	
-	emitter.on('room/terminalUnshared', async ({ senderUsername, terminalID: originalTerminalID }) => {
-		RunningConfig.emit('unregisterTerminalShell',{
-			name: `remote:${originalTerminalID}@${senderUsername}`
-		})
-	})
 
 	const validPath = (path) => {
 		const sanitizedPath = sanitizePath(path)
@@ -451,8 +341,7 @@ const createSidePanel = (emitter,API) => {
 					]
 				})
 				puffin.render(usersExplorer,this.querySelector("#users"))
-				
-			
+
 				function getFoldersItems(setItems){
 					return Object.keys(openedFolders).map((path) => {
 						let state = openedFolders[path]
@@ -513,9 +402,6 @@ const createSidePanel = (emitter,API) => {
 							},
 							listDir: async function(path){
 								return await getItemsInFolder(emitter, path, senderUserid)
-							},
-							isGitRepo(){
-								return new Promise( res => res(false))
 							},
 							readFile: function (path) {
 								return new Promise( async (res) => {
