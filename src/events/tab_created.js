@@ -1,21 +1,21 @@
-import { sanitizePath  } from '../utils'
+import { sanitizePath } from '../utils'
 
-const tabCreated = ({ 
-	emitter, 
-	puffin, 
-	directory, 
-	instance, 
+const tabCreated = ({
+	emitter,
+	puffin,
+	directory,
+	instance,
 	client,
 	tabElement,
-	ContextMenu  
+	ContextMenu
 }) => {
 
 	emitter.on('room/writeFileContent', async ({ filePath, fileContent }) => {
-		if(filePath === directory){
+		if (filePath === directory) {
 			tabElement.state.emit('savedMe')
 		}
 	})
-	
+
 	const cursorClass = puffin.style`
 		& {
 			border-left-style: solid;
@@ -26,16 +26,16 @@ const tabCreated = ({
 		}
 	`
 	let previousBookmark
-	emitter.on('room/cursorSetIn', async ({ filePath, line, ch, senderUsername, senderUsercolor,  }) => {
-		if( sanitizePath(directory) === sanitizePath(filePath) ){
-			if(previousBookmark) previousBookmark.clear()
+	emitter.on('room/cursorSetIn', async ({ filePath, line, ch, senderUsername, senderUsercolor, }) => {
+		if (sanitizePath(directory) === sanitizePath(filePath)) {
+			if (previousBookmark) previousBookmark.clear()
 			const peerCursor = document.createElement('span');
 			peerCursor.style.borderLeftColor = senderUsercolor;
 			peerCursor.classList.add(cursorClass)
 			let closeContext = null
 			peerCursor.onmouseenter = event => {
 				const { close } = new ContextMenu({
-					list:[
+					list: [
 						{
 							label: senderUsername
 						}
@@ -46,23 +46,23 @@ const tabCreated = ({
 				closeContext = close
 			}
 			peerCursor.onmouseleave = event => {
-				if(closeContext) {
-					setTimeout(()=>{
+				if (closeContext) {
+					setTimeout(() => {
 						closeContext()
-					},450)
+					}, 450)
 				}
 			}
-			previousBookmark = client.do('setBookmark',{
+			previousBookmark = client.do('setBookmark', {
 				instance,
-				line: line -1,
-				ch: ch -1,
+				line: line - 1,
+				ch: ch - 1,
 				element: peerCursor
 			})
 		}
 	})
 	emitter.on('room/contentModified', async ({ filePath, from, to, value }) => {
-		if( sanitizePath(directory) === sanitizePath(filePath) ){
-			client.do('replaceRange',{
+		if (sanitizePath(directory) === sanitizePath(filePath)) {
+			client.do('replaceRange', {
 				instance,
 				from,
 				to,
@@ -70,44 +70,48 @@ const tabCreated = ({
 			})
 		}
 	})
-	client.do('onChanged',{ instance, action: (data, changeObj) => handleChanges({
-		changeObj,
-		emitter, 
-		client, 
-		instance,
-		directory
-	})})
-	client.do('onActive',{ instance, action: (data, changeObj) => handleCursor({
-		changeObj,
-		client,
-		instance,
-		directory,emitter
-	})})
+	client.do('onChanged', {
+		instance, action: (data, changeObj) => handleChanges({
+			changeObj,
+			emitter,
+			client,
+			instance,
+			directory
+		})
+	})
+	client.do('onActive', {
+		instance, action: (data, changeObj) => handleCursor({
+			changeObj,
+			client,
+			instance,
+			directory, emitter
+		})
+	})
 }
 
 let lastChange = null
 const handleChanges = ({
 	changeObj,
-	emitter, 
-	client, 
-	instance, 
+	emitter,
+	client,
+	instance,
 	directory
 }) => {
-	if(lastChange){ // Avoid initial value
-		if(JSON.stringify(lastChange) == JSON.stringify(changeObj) || changeObj.origin === "+move") return //Prevent propagation
+	if (lastChange) { // Avoid initial value
+		if (JSON.stringify(lastChange) == JSON.stringify(changeObj) || changeObj.origin === "+move") return //Prevent propagation
 	}
-	const lineValue = client.do('getLine',{
+	const lineValue = client.do('getLine', {
 		instance,
 		line: changeObj.from.line
 	})
-	emitter.emit('message',{
+	emitter.emit('message', {
 		type: 'contentModified',
 		content: {
-			from:{
+			from: {
 				line: changeObj.from.line,
 				ch: 0
 			},
-			to:{
+			to: {
 				line: changeObj.to.line,
 				ch: 9999
 			},
@@ -119,17 +123,17 @@ const handleChanges = ({
 }
 
 const handleCursor = ({
-	emitter, 
-	client, 
-	instance, 
+	emitter,
+	client,
+	instance,
 	directory
 }) => {
-	const { line, ch } = client.do('getCursorPosition',{
+	const { line, ch } = client.do('getCursorPosition', {
 		instance
 	})
-	emitter.emit('message',{
+	emitter.emit('message', {
 		type: 'cursorSetIn',
-		content:{
+		content: {
 			filePath: sanitizePath(directory),
 			line,
 			ch

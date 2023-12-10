@@ -1,16 +1,16 @@
 const getFileContent = ({
-	emitter, 
+	emitter,
 	filePath
 }) => {
-	return new Promise((resolve, reject ) => {
-		emitter.emit('message',{
+	return new Promise((resolve, reject) => {
+		emitter.emit('message', {
 			type: 'getFileContent',
-			content:{
+			content: {
 				filePath
 			}
 		})
-		emitter.on('returnGetFileContent',({ filePath: returnFilePath, fileContent }) => {
-			if( filePath === returnFilePath ){
+		emitter.on('returnGetFileContent', ({ filePath: returnFilePath, fileContent }) => {
+			if (filePath === returnFilePath) {
 				resolve(fileContent)
 			}
 		})

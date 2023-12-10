@@ -1,23 +1,23 @@
 const configDialog = ({ puffin, Window, SideMenu, drac }) => {
-	return new Promise((resolve, reject)=>{
+	return new Promise((resolve, reject) => {
 		const configWindow = new Window({
 			width: '550px',
 			height: '450px',
-			component(){
+			component() {
 				const styleWrapper = puffin.style`
 					& > * {
 						display: block;
 						margin: 10px 0px;
 					}
 				`
-				
-				function connectFromCode(){
-					const username = document.getElementById('username_code').value 
+
+				function connectFromCode() {
+					const username = document.getElementById('username_code').value
 					const code = document.getElementById('code_code').value.split('##')
-					
+
 					const room = code[0]
 					const password = code[1]
-					
+
 					resolve({
 						room,
 						username,
@@ -25,11 +25,12 @@ const configDialog = ({ puffin, Window, SideMenu, drac }) => {
 					})
 					configWindow.close()
 				}
-				
-				function connectRandomly(){
-					const username = document.getElementById('username_random').value 
-					const room = (Math.random()*100).toString().slice(0, 5) + username.slice(0, 6)
-					const password = Math.random().toString().repeat(32).substring(0,32)
+
+				function connectRandomly() {
+					const username = document.getElementById('username_random').value
+					const room = (Math.random() * 100).toString().slice(0, 5) + username.slice(0, 6)
+					// PW upgrade to 32 chars
+					const password = Math.random().toString().repeat(32).substring(0, 32)
 					resolve({
 						room,
 						username,
@@ -37,11 +38,12 @@ const configDialog = ({ puffin, Window, SideMenu, drac }) => {
 					})
 					configWindow.close()
 				}
-				
-				function connectManually(){
+
+				function connectManually() {
 					const room = document.getElementById('room_manually').value || 'public'
-					const username = document.getElementById('username_manually').value 
-					const password = document.getElementById('password_manually').value.repeat(32).substring(0,32)
+					const username = document.getElementById('username_manually').value
+					// PW upgrade to 32 chars
+					const password = document.getElementById('password_manually').value.repeat(32).substring(0, 32)
 					resolve({
 						room,
 						username,
@@ -49,10 +51,10 @@ const configDialog = ({ puffin, Window, SideMenu, drac }) => {
 					})
 					configWindow.close()
 				}
-				
-				
+
+
 				return puffin.element({
-					components:{
+					components: {
 						SideMenu,
 						Input: drac.Input,
 						Button: drac.Button

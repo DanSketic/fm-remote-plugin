@@ -1,4 +1,3 @@
-import { join, basename, dirname, extname, normalize } from "path"
 import shortid from 'shortid'
 import randomColorRGB from 'random-color-rgb'
 import dayjs from 'dayjs'
@@ -11,43 +10,44 @@ import writeFile from './src/events/write_file'
 import userJoined from './src/events/user_joined'
 import configDialog from './src/config_dialog'
 
-import { sanitizePath, getExtension }from './src/utils'
+import { sanitizePath, getExtension } from './src/utils'
 
 import { createHash } from 'crypto'
 import simpleEncryptor from 'simple-encryptor'
 
 class Instance {
-	constructor({ emitter, room, username, password }){
+	constructor({ emitter, room, username, password }) {
 		this.room = room
 		this.username = username
 		this.userid = shortid.generate()
-		this.usercolor = randomColorRGB({min: 70})
+		this.usercolor = randomColorRGB({ min: 70 })
 		this.password = createHash('sha256').update(password).digest()
 		this.emitter = emitter
 		this.emitter.data = this
 		this.sharedFolders = {}
-		this.conn = new WebSocket('wss://fm-remote.dansketic.com/websockets')
+		this.conn = new WebSocket('wss://fm-remote.dansketic.com')
 		this.roomcode = `${this.room}##${password}`
 		this.encryptor = simpleEncryptor(password)
-		
+
 		this.conn.onopen = () => {
 			//Tell the whole room you joined
-			this.send('userJoin',{
+			this.send('userJoin', {
 				username: this.username
 			})
-			
+
 			setInterval(() => {
 				//Send a ping to the connection socket, so it doesn't die
-				this.send('connectionPing',{})
-				
+				this.send('connectionPing', {})
 			}, 30000)
-			
-			this.emitter.emit('instance/connected',{
+
+			this.emitter.emit('instance/connected', {
 				room: this.room,
 				username: this.username,
 				userid: this.userid,
 				usercolor: this.usercolor
 			})
+
+			console.log(this.roomcode)
 		}
 
 		this.conn.onerror = error => {
@@ -55,10 +55,10 @@ class Instance {
 		}
 
 		this.conn.onmessage = e => {
-			const { encrypted = true, userid, usercolor, username, type, data} = JSON.parse(e.data)
-			
+			const { encrypted = true, userid, usercolor, username, type, data } = JSON.parse(e.data)
+
 			const decryptedData = encrypted ? this.encryptor.decrypt(data) : JSON.parse(data)
-			
+
 			this.emitter.emit(`room/${type}`, {
 				...decryptedData,
 				senderUsername: username,
@@ -66,15 +66,17 @@ class Instance {
 				senderUsercolor: usercolor
 			})
 		}
+
 		this.emitter.on('message', data => {
 			this.send(data.type, data.content)
 		})
-		this.emitter.on('disconnect', data => {
+
+		this.emitter.on('instance/disconnect', data => {
 			this.conn.close()
 		})
 	}
-	send(eventName, data = {}){
-		
+	send(eventName, data = {}) {
+
 		const encryptedData = this.encryptor.encrypt(data)
 
 		this.conn.send(JSON.stringify(
@@ -89,10 +91,10 @@ class Instance {
 			}
 		))
 	}
-	on(eventName, args){
+	on(eventName, args) {
 		return this.emitter.on(eventName, args)
 	}
-	waitToConnect(){
+	waitToConnect() {
 		return new Promise((res) => {
 			this.on('instance/connected', () => res())
 		})
@@ -100,27 +102,28 @@ class Instance {
 }
 
 
-export function entry(API){
-	const { drac: { Button }, puffin, StatusBarItem, ContextMenu, Notification, RunningConfig } = API 
+export function entry(API) {
+	const { drac: { Button }, puffin, StatusBarItem, ContextMenu, Notification, RunningConfig } = API
 	const emitter = new puffin.state()
-	createSidePanel(emitter,API)
+	createSidePanel(emitter, API)
 
 	new StatusBarItem({
 		label: 'Remote',
-		action(e){
+		action(e) {
 			new ContextMenu({
 				parent: e.target,
-				list:[
+				list: [
 					{
 						label: 'Join',
-						action: async function(){
-							const { room, password, username } = await configDialog(API) 
+						action: async function () {
+							const { room, username, password } = await configDialog(API)
 
+							console.log(password)
 							const my_instance = new Instance({
 								emitter,
-								room, 
-								password, 
-								username
+								room,
+								username,
+								password
 							})
 
 							await my_instance.waitToConnect()
@@ -134,8 +137,8 @@ export function entry(API){
 					},
 					{
 						label: 'Disconnect',
-						action(){
-							emitter.emit('instance/disconnect',{})
+						action() {
+							emitter.emit('instance/disconnect', {})
 						}
 					}
 				],
@@ -145,14 +148,14 @@ export function entry(API){
 	})
 }
 
-function handleEvents(emitter,API){
+function handleEvents(emitter, API) {
 	const { RunningConfig } = API
 
 	const validPath = (path) => {
 		const sanitizedPath = sanitizePath(path)
 		return new Promise((res) => {
 			Object.keys(emitter.data.sharedFolders).find(p => {
-				if(sanitizedPath.match(p)){
+				if (sanitizedPath.match(p)) {
 					res(true)
 					return
 				}
@@ -160,23 +163,23 @@ function handleEvents(emitter,API){
 			res(false)
 		})
 	}
-	
+
 	emitter.on('room/listFolder', async ({ folderPath }) => {
-		if(!await validPath(folderPath)) return
+		if (!await validPath(folderPath)) return
 		listFolder({
 			emitter,
 			folderPath
 		})
 	})
 	emitter.on('room/getFileContent', async ({ filePath }) => {
-		if(!await validPath(filePath)) return
+		if (!await validPath(filePath)) return
 		readFile({
 			emitter,
 			filePath
 		})
 	})
 	emitter.on('room/writeFileContent', async ({ filePath, fileContent }) => {
-		if(!await validPath(filePath)) return
+		if (!await validPath(filePath)) return
 		writeFile({
 			emitter,
 			filePath,
@@ -192,8 +195,8 @@ function handleEvents(emitter,API){
 	})
 	emitter.on('room/welcome', async ({ users }) => {
 		users.map(({ username, userid, usercolor }) => {
-			if(userid === emitter.data.userid) return
-			emitter.emit('room/userJoin',{
+			if (userid === emitter.data.userid) return
+			emitter.emit('room/userJoin', {
 				senderUsername: username,
 				senderUserid: userid,
 				senderUsercolor: usercolor
@@ -212,7 +215,7 @@ function handleEvents(emitter,API){
 	})
 }
 
-const createSidePanel = (emitter,API) => {
+const createSidePanel = (emitter, API) => {
 	const { puffin, SidePanel, Explorer, FilesExplorer, RunningConfig } = API
 	const iconStyle = puffin.style`
 		& > * {
@@ -223,8 +226,8 @@ const createSidePanel = (emitter,API) => {
 		}
 	`
 	new SidePanel({
-		icon(){
-			return  puffin.element`
+		icon() {
+			return puffin.element`
 				<svg class="${iconStyle}" width="26" height="22" viewBox="0 0 26 22" fill="none" xmlns="http://www.w3.org/2000/svg">
 					<rect x="1" y="17.2105" width="9.36842" height="3.68421" rx="1.84211" stroke-width="2"/>
 					<circle cx="5.46677" cy="11.7831" r="2.9048" stroke-width="2"/>
@@ -234,20 +237,20 @@ const createSidePanel = (emitter,API) => {
 				</svg>
 			`
 		},
-		panel(){
-			function mounted(){
+		panel() {
+			function mounted() {
 				const activeUsers = {}
 				const openedFolders = {}
 				const getCurrentUsers = () => {
-					return Object.keys(activeUsers).map( userid => {
+					return Object.keys(activeUsers).map(userid => {
 						const { username, usercolor, isMe } = activeUsers[userid]
 						return {
-							label:  username,
-							decorator:{
-								label: isMe? 'You': '',
+							label: username,
+							decorator: {
+								label: isMe ? 'You' : '',
 								background: usercolor
 							},
-							iconComp(){
+							iconComp() {
 								return puffin.element`
 									<svg width="20" height="20" viewBox="0 0 45 45" fill="none" xmlns="http://www.w3.org/2000/svg">
 										<path d="M9 38.2727C9 32.6494 13.5586 28.0909 19.1818 28.0909H26.8182C32.4414 28.0909 37 32.6494 37 38.2727V38.2727H9V38.2727Z" fill="#919191"/>
@@ -258,16 +261,16 @@ const createSidePanel = (emitter,API) => {
 						}
 					})
 				}
-				
+
 				const usersExplorer = new Explorer({
-					items:[
+					items: [
 						{
-							label:  'Users',
-							decorator:{
+							label: 'Users',
+							decorator: {
 								label: '0'
 							},
 							items: [],
-							iconComp(){
+							iconComp() {
 								return puffin.element`
 									<svg width="20" height="20" viewBox="0 0 45 45" fill="none" xmlns="http://www.w3.org/2000/svg">
 										<path d="M16 29.9999C16 26.1579 19.1145 23.0434 22.9565 23.0434H29.0435C32.8855 23.0434 36 26.1579 36 29.9999V29.9999H16V29.9999Z" fill="#919191"/>
@@ -277,12 +280,12 @@ const createSidePanel = (emitter,API) => {
 									</svg>
 								`
 							},
-							mounted({ setItems, setDecorator }){
-								emitter.on('instance/connected',({ room, userid, username, usercolor }) => {
+							mounted({ setItems, setDecorator }) {
+								emitter.on('instance/connected', ({ room, userid, username, usercolor }) => {
 									activeUsers[userid] = {
 										username,
 										usercolor,
-										isMe : true
+										isMe: true
 									}
 									const currentUsers = getCurrentUsers()
 									setItems(currentUsers)
@@ -290,19 +293,19 @@ const createSidePanel = (emitter,API) => {
 										label: Object.keys(currentUsers).length
 									})
 									document.getElementById('room_name').innerText = room
-									
+
 									dayjs.extend(relativeTime)
 									const startedDate = dayjs(new Date())
 									setInterval(() => {
 										document.getElementById('time_counter').innerText = startedDate.fromNow()
 									})
-									
+
 								})
 								emitter.on('room/userJoin', ({ senderUserid, senderUsername, senderUsercolor }) => {
 									activeUsers[senderUserid] = {
 										username: senderUsername,
 										usercolor: senderUsercolor,
-										isMe : false
+										isMe: false
 									}
 									const currentUsers = getCurrentUsers()
 									setItems(currentUsers)
@@ -318,7 +321,8 @@ const createSidePanel = (emitter,API) => {
 										label: Object.keys(currentUsers).length
 									})
 								})
-								emitter.on('disconnect',()=>{
+								emitter.on('instance/disconnect', () => {
+									console.log(emitter.data)
 									delete activeUsers[emitter.data.me.userid]
 									setDecorator({
 										label: '0'
@@ -326,10 +330,10 @@ const createSidePanel = (emitter,API) => {
 									setItems([])
 								})
 							}
-						},{
+						}, {
 							label: 'Folders',
 							icon: 'folder.closed',
-							mounted({ setItems }){
+							mounted({ setItems }) {
 								RunningConfig.on('addFolderToRunningWorkspace', ({ folderPath }) => {
 									let fPath = sanitizePath(folderPath)
 									openedFolders[fPath] = false
@@ -340,23 +344,23 @@ const createSidePanel = (emitter,API) => {
 						}
 					]
 				})
-				puffin.render(usersExplorer,this.querySelector("#users"))
+				puffin.render(usersExplorer, this.querySelector("#users"))
 
-				function getFoldersItems(setItems){
+				function getFoldersItems(setItems) {
 					return Object.keys(openedFolders).map((path) => {
 						let state = openedFolders[path]
 						return {
 							label: path,
-							decorator:{
+							decorator: {
 								label: state ? '🔊' : ''
 							},
-							action(e, { setLabel, setDecorator }){
+							action(e, { setLabel, setDecorator }) {
 								state = !state
 								const sanitizedPath = sanitizePath(path)
 								openedFolders[path] = state
-								if(state){
+								if (state) {
 									emitter.data.sharedFolders[sanitizedPath] = state
-									emitter.emit('message',{
+									emitter.emit('message', {
 										type: 'openedFolder',
 										content: {
 											folderPath: sanitizedPath
@@ -365,9 +369,9 @@ const createSidePanel = (emitter,API) => {
 									setDecorator({
 										label: '🔊'
 									})
-								}else{
+								} else {
 									delete emitter.data.sharedFolders[sanitizedPath]
-									emitter.emit('message',{
+									emitter.emit('message', {
 										type: 'closedFolder',
 										content: {
 											folderPath: sanitizedPath
@@ -383,38 +387,38 @@ const createSidePanel = (emitter,API) => {
 					})
 				}
 				let sharedExplorers = []
-				
+
 				emitter.on('room/closedFolder', async ({ folderPath }) => {
 					console.log(folderPath, sharedExplorers)
 					sharedExplorers.forEach(explorer => {
-						if(explorer.projectPath === folderPath){
+						if (explorer.projectPath === folderPath) {
 							explorer.itemElement.instance.itemState.emit('destroyed')
 						}
 					})
 				})
-				
+
 				emitter.on('room/openedFolder', async ({ folderPath, senderUserid, senderUsername }) => {
-					
+
 					const explorerInstance = new FilesExplorer(folderPath, folderPath, document.getElementById('explorer_panel'), 0, false, null, {
 						provider: {
-							decorator:{
+							decorator: {
 								text: `remote@${senderUsername}`
 							},
-							listDir: async function(path){
+							listDir: async function (path) {
 								return await getItemsInFolder(emitter, path, senderUserid)
 							},
 							readFile: function (path) {
-								return new Promise( async (res) => {
-									
-									emitter.once('room/returnGetFileContent',({
+								return new Promise(async (res) => {
+
+									emitter.once('room/returnGetFileContent', ({
 										filePath,
 										fileContent
 									}) => {
-										if(filePath === sanitizePath(path)){
+										if (filePath === sanitizePath(path)) {
 											res(fileContent)
 										}
 									})
-									emitter.emit('message',{
+									emitter.emit('message', {
 										type: 'getFileContent',
 										content: {
 											filePath: sanitizePath(path)
@@ -423,8 +427,8 @@ const createSidePanel = (emitter,API) => {
 								})
 							},
 							writeFile: function (filePath, fileContent) {
-								return new Promise( async (res) => {
-									emitter.emit('message',{
+								return new Promise(async (res) => {
+									emitter.emit('message', {
 										type: 'writeFileContent',
 										content: {
 											filePath,
@@ -446,7 +450,7 @@ const createSidePanel = (emitter,API) => {
 					margin: 2px 15px;
 				}
 			`
-			
+
 			return puffin.element`
 				<div class="${wrapperStyle}"mounted="${mounted}">
 					${getInfoCards(emitter, API)}
@@ -480,14 +484,18 @@ const getInfoCards = (emitter, API) => {
 			margin: 2px 0px;
 		}
 	`
-	
-	function shareRoom(){
+
+	function shareRoom() {
 		const codeDialog = new Dialog({
 			title: `Room's Code`,
-			component(){
-				return puffin.element`<p style="user-select: all; word-break: break-all;">${emitter.data.roomcode}</p>`
+			component() {
+				if (!emitter.data.roomcode) {
+					return puffin.element`<p style="user-select: all; word-break: break-word;">You have not created or joined any rooms yet</p>`
+				} else {
+					return puffin.element`<p style="user-select: all; word-break: break-word;">${emitter.data.roomcode}</p>`
+				}
 			},
-			buttons:[
+			buttons: [
 				{
 					label: 'misc.Accept'
 				}
@@ -495,9 +503,9 @@ const getInfoCards = (emitter, API) => {
 		})
 		codeDialog.launch()
 	}
-	
+
 	return puffin.element({
-		components:{
+		components: {
 			Card: drac.Card
 		}
 	})`
@@ -516,15 +524,15 @@ const getInfoCards = (emitter, API) => {
 
 const getItemsInFolder = async (emitter, folderPath, useridServer) => {
 	return new Promise(resolve => {
-		emitter.emit('message',{
+		emitter.emit('message', {
 			type: 'listFolder',
 			userids: [useridServer],
 			content: {
 				folderPath
 			}
 		})
-		emitter.once('room/returnlistFolder',({ folderPath: returnedFolderPath, folderItems })=>{
-			if( folderPath === returnedFolderPath ){
+		emitter.once('room/returnlistFolder', ({ folderPath: returnedFolderPath, folderItems }) => {
+			if (folderPath === returnedFolderPath) {
 				resolve(folderItems)
 			}
 		})
