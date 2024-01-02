@@ -12,13 +12,13 @@
 		"watch": "fm2sdk -p ./ -t plugin -m dev -pm web"
 	},
 	"dependencies": {
-		"dayjs": "^1.8.36",
+		"dayjs": "^1.11.10",
 		"random-color-rgb": "^1.1.1",
-		"shortid": "^2.2.15",
+		"shortid": "^2.2.16",
 		"simple-encryptor": "^4.0.0",
 		"strong-cryptor": "^2.2.0"
 	},
 	"devDependencies": {
-		"@fm2/sdk": "^0.5.4"
+		"@fm2/sdk": "^0.5.6"
 	}
 }

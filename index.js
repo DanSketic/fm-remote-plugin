@@ -1,6 +1,9 @@
+import translate from "./i18n.js";
 import shortid from 'shortid'
 import randomColorRGB from 'random-color-rgb'
 import dayjs from 'dayjs'
+import 'dayjs/locale/de'
+import 'dayjs/locale/hu'
 import relativeTime from 'dayjs/plugin/relativeTime'
 
 import listFolder from './src/events/list_folder'
@@ -14,6 +17,7 @@ import { sanitizePath, getExtension } from './src/utils'
 
 import { createHash } from 'crypto'
 import simpleEncryptor from 'simple-encryptor'
+
 
 class Instance {
 	constructor({ emitter, room, username, password }) {
@@ -103,18 +107,18 @@ class Instance {
 
 
 export function entry(API) {
-	const { drac: { Button }, puffin, StatusBarItem, ContextMenu, Notification, RunningConfig } = API
+	const { drac: { Button }, puffin, StatusBarItem, ContextMenu, Notification, RunningConfig, StaticConfig } = API
 	const emitter = new puffin.state()
 	createSidePanel(emitter, API)
 
 	new StatusBarItem({
-		label: 'Remote',
+		label: translate("remote", StaticConfig.data.appLanguage),
 		action(e) {
 			new ContextMenu({
 				parent: e.target,
 				list: [
 					{
-						label: 'Join',
+						label: translate("join", StaticConfig.data.appLanguage),
 						action: async function () {
 							const { room, username, password } = await configDialog(API)
 
@@ -129,14 +133,14 @@ export function entry(API) {
 							await my_instance.waitToConnect()
 
 							new Notification({
-								title: `Joined #${room} as ${username}`,
+								title: translate("disconnect", StaticConfig.data.appLanguage) + ` #${room} - ${username}`,
 								content: ''
 							})
 							handleEvents(emitter, API)
 						}
 					},
 					{
-						label: 'Disconnect',
+						label: translate("disconnect", StaticConfig.data.appLanguage),
 						action() {
 							emitter.emit('instance/disconnect', {})
 						}
@@ -216,7 +220,7 @@ function handleEvents(emitter, API) {
 }
 
 const createSidePanel = (emitter, API) => {
-	const { puffin, SidePanel, Explorer, FilesExplorer, RunningConfig } = API
+	const { puffin, SidePanel, Explorer, FilesExplorer, RunningConfig, StaticConfig } = API
 	const iconStyle = puffin.style`
 		& > * {
 			stroke: var(--iconFill);
@@ -247,7 +251,7 @@ const createSidePanel = (emitter, API) => {
 						return {
 							label: username,
 							decorator: {
-								label: isMe ? 'You' : '',
+								label: isMe ? translate("you", StaticConfig.data.appLanguage) : '',
 								background: usercolor
 							},
 							iconComp() {
@@ -265,7 +269,7 @@ const createSidePanel = (emitter, API) => {
 				const usersExplorer = new Explorer({
 					items: [
 						{
-							label: 'Users',
+							label: translate("users", StaticConfig.data.appLanguage),
 							decorator: {
 								label: '0'
 							},
@@ -295,6 +299,9 @@ const createSidePanel = (emitter, API) => {
 									document.getElementById('room_name').innerText = room
 
 									dayjs.extend(relativeTime)
+									let newLangForDayJS = StaticConfig.data.appLanguage.slice(0, 2)
+									newLangForDayJS ? 'ge' : newLangForDayJS = 'de'
+									dayjs.locale(newLangForDayJS)
 									const startedDate = dayjs(new Date())
 									setInterval(() => {
 										document.getElementById('time_counter').innerText = startedDate.fromNow()
@@ -331,7 +338,7 @@ const createSidePanel = (emitter, API) => {
 								})
 							}
 						}, {
-							label: 'Folders',
+							label: translate("folders", StaticConfig.data.appLanguage),
 							icon: 'folder.closed',
 							mounted({ setItems }) {
 								RunningConfig.on('addFolderToRunningWorkspace', ({ folderPath }) => {
@@ -462,7 +469,7 @@ const createSidePanel = (emitter, API) => {
 }
 
 const getInfoCards = (emitter, API) => {
-	const { puffin, drac, Dialog } = API
+	const { puffin, drac, Dialog, StaticConfig } = API
 	const cardStyle = puffin.style`
 		& > div{
 			background: var(--sidebarBackground);
@@ -487,10 +494,10 @@ const getInfoCards = (emitter, API) => {
 
 	function shareRoom() {
 		const codeDialog = new Dialog({
-			title: `Room's Code`,
+			title: translate("rooms_code", StaticConfig.data.appLanguage),
 			component() {
 				if (!emitter.data.roomcode) {
-					return puffin.element`<p style="user-select: all; word-break: break-word;">You have not created or joined any rooms yet</p>`
+					return puffin.element`<p style="user-select: all; word-break: break-word;">${translate("not_created_or_joined_room", StaticConfig.data.appLanguage)}</p>`
 				} else {
 					return puffin.element`<p style="user-select: all; word-break: break-word;">${emitter.data.roomcode}</p>`
 				}
@@ -511,12 +518,12 @@ const getInfoCards = (emitter, API) => {
 	})`
 		<div class="${cardStyle}">
 			<Card :click="${shareRoom}">
-				<h6>SHARE ROOM</h6>
-				<span id="room_name">None</span>
+				<h6>${translate("share_room", StaticConfig.data.appLanguage)}</h6>
+				<span id="room_name">${translate("none", StaticConfig.data.appLanguage)}</span>
 			</Card>
 			<Card>
-				<h6>TIME</h6>
-				<span id="time_counter">None</span>
+				<h6>${translate("time", StaticConfig.data.appLanguage)}</h6>
+				<span id="time_counter">${translate("none", StaticConfig.data.appLanguage)}</span>
 			</Card>
 		</div>
 	`

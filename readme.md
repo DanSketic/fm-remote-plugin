@@ -7,7 +7,7 @@
 Markdown usage:
 ```![MadeForFM2](https://raw.githubusercontent.com/DanSketic/Filing-Manager-Website/master/badges/made_for_fm2.svg?sanitize=true)```
 
-This is a Remote Live Coding plugin for Graviton.
+This is a Remote Live Coding plugin for Filing-Manager.
 
 **NOTE**: This is very **experimantal**, unstable, insecure, etc. Still in work in progress.
 

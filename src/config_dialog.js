@@ -1,4 +1,6 @@
-const configDialog = ({ puffin, Window, SideMenu, drac }) => {
+import translate from "../i18n.js";
+
+const configDialog = ({ puffin, Window, SideMenu, drac, StaticConfig }) => {
 	return new Promise((resolve, reject) => {
 		const configWindow = new Window({
 			width: '550px',
@@ -62,32 +64,32 @@ const configDialog = ({ puffin, Window, SideMenu, drac }) => {
 				})`
 				<SideMenu default="normal">
 					<div>
-						<h1>Remote</h1>
-						<label to="normal">Normal</label>
-						<label to="code">With Code</label>
-						<label to="random">Random</label>
+						<h1>${translate("remote", StaticConfig.data.appLanguage)}</h1>
+						<label to="normal">${translate("normal", StaticConfig.data.appLanguage)}</label>
+						<label to="code">${translate("with_code", StaticConfig.data.appLanguage)}</label>
+						<label to="random">${translate("random", StaticConfig.data.appLanguage)}</label>
 					</div>
 					<div>
 						<div href="normal" class="${styleWrapper}">
-							<label>Room</label> 
-							<Input placeHolder="AccParty" id="room_manually"/>
-							<label>Username</label> 
-							<Input placeHolder="XYZ" id="username_manually"/>
-							<label>Password</label> 
-							<Input type="password" id="password_manually"/>
-							<Button :click="${connectManually}">Connect</Button>
+							<label>${translate("room", StaticConfig.data.appLanguage)}</label> 
+							<Input placeHolder="${translate("accparty", StaticConfig.data.appLanguage)}" id="room_manually"/>
+							<label>${translate("username", StaticConfig.data.appLanguage)}</label> 
+							<Input placeHolder="${translate("username", StaticConfig.data.appLanguage)}" id="username_manually"/>
+							<label>${translate("password", StaticConfig.data.appLanguage)}</label> 
+							<Input type="password" placeHolder="${translate("pw_ph", StaticConfig.data.appLanguage)}" id="password_manually"/>
+							<Button :click="${connectManually}">${translate("connect", StaticConfig.data.appLanguage)}</Button>
 						</div>
 						<div href="code" class="${styleWrapper}">
-							<label>Code</label> 
-							<Input placeHolder="party##supersecret" id="code_code"/>
-							<label>Username</label> 
-							<Input placeHolder="XYZ" id="username_code"/>
-							<Button :click="${connectFromCode}">Connect</Button>
+							<label>${translate("code", StaticConfig.data.appLanguage)}</label> 
+							<Input placeHolder="${translate("code_ph", StaticConfig.data.appLanguage)}" id="code_code"/>
+							<label>${translate("username", StaticConfig.data.appLanguage)}</label> 
+							<Input placeHolder="${translate("xyz", StaticConfig.data.appLanguage)}" id="username_code"/>
+							<Button :click="${connectFromCode}">${translate("connect", StaticConfig.data.appLanguage)}</Button>
 						</div>
 						<div href="random" class="${styleWrapper}">
-							<label>Your name</label> 
-							<Input placeHolder="XYZ" id="username_random"/>
-							<Button :click="${connectRandomly}">Connect</Button>
+							<label>${translate("your_name", StaticConfig.data.appLanguage)}</label> 
+							<Input placeHolder="${translate("xyz", StaticConfig.data.appLanguage)}" id="username_random"/>
+							<Button :click="${connectRandomly}">${translate("connect", StaticConfig.data.appLanguage)}</Button>
 						</div>
 					</div>
 				</SideMenu>
