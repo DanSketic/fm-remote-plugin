@@ -34,17 +34,17 @@ git clone https://github.com/DanSketic/fm-sdk.git
 
 Install dependencies:
 ```shell
-yarn
+npm install
 ```
 
 Watch for changes (development):
 ```shell
-yarn run watch
+npm watch
 ```
 
 Build (optional):
 ```shell
-yarn run build
+npm build
 ```
 
 Made by Marc Espín Sanz.

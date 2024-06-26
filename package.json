@@ -3,7 +3,7 @@
 	"id": "remote-plugin",
 	"description": "This is a Remote Live plugin for FM2",
 	"author": "DanSketic",
-	"version": "0.2.1",
+	"version": "0.2.2",
 	"main": "index.js",
 	"mainSrc": "index.js",
 	"mainDev": "dist/index.js",
@@ -12,13 +12,13 @@
 		"watch": "fm2sdk -p ./ -t plugin -m dev -pm web"
 	},
 	"dependencies": {
-		"dayjs": "^1.11.10",
+		"dayjs": "^1.11.11",
+		"nanoid": "^5.0.7",
 		"random-color-rgb": "^1.1.1",
-		"shortid": "^2.2.16",
 		"simple-encryptor": "^4.0.0",
 		"strong-cryptor": "^2.2.0"
 	},
 	"devDependencies": {
-		"@fm2/sdk": "^0.5.6"
+		"@fm2/sdk": "^0.5.9"
 	}
 }

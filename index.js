@@ -1,5 +1,4 @@
 import translate from "./i18n.js";
-import shortid from 'shortid'
 import randomColorRGB from 'random-color-rgb'
 import dayjs from 'dayjs'
 import 'dayjs/locale/de'
@@ -15,6 +14,7 @@ import configDialog from './src/config_dialog'
 
 import { sanitizePath, getExtension } from './src/utils'
 
+import { nanoid } from 'nanoid'
 import { createHash } from 'crypto'
 import simpleEncryptor from 'simple-encryptor'
 
@@ -23,13 +23,13 @@ class Instance {
 	constructor({ emitter, room, username, password }) {
 		this.room = room
 		this.username = username
-		this.userid = shortid.generate()
+		this.userid = nanoid(8)
 		this.usercolor = randomColorRGB({ min: 70 })
 		this.password = createHash('sha256').update(password).digest()
 		this.emitter = emitter
 		this.emitter.data = this
 		this.sharedFolders = {}
-		this.conn = new WebSocket('wss://fm-remote.dansketic.com')
+		this.conn = new WebSocket('wss://fm-remote.dansketic.com/websockets')
 		this.roomcode = `${this.room}##${password}`
 		this.encryptor = simpleEncryptor(password)
 
@@ -330,7 +330,7 @@ const createSidePanel = (emitter, API) => {
 								})
 								emitter.on('instance/disconnect', () => {
 									console.log(emitter.data)
-									delete activeUsers[emitter.data.me.userid]
+									delete activeUsers[emitter.data.userid]
 									setDecorator({
 										label: '0'
 									})
@@ -406,7 +406,7 @@ const createSidePanel = (emitter, API) => {
 
 				emitter.on('room/openedFolder', async ({ folderPath, senderUserid, senderUsername }) => {
 
-					const explorerInstance = new FilesExplorer(folderPath, folderPath, document.getElementById('explorer_panel'), 0, false, null, {
+					const explorerInstance = new FilesExplorer(folderPath, folderPath, document.getElementById('explorer_panel'), 0, false, {
 						provider: {
 							decorator: {
 								text: `remote@${senderUsername}`
